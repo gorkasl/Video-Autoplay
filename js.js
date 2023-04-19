@@ -26,7 +26,7 @@ function cargarVideo(){
         imagen.remove();
         var source = document.createElement("source");
         source.src = bajaRes;
-        source.type = "video/webm";
+        source.type = "video/mp4";
         video.appendChild(source);
         video.muted = true;
         video.autoplay="autoplay";
