@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<!--
+EDITA
+Dentro de las etiquetas title, pon el nombre de tu mapa, aparecerá en la barra del navegador.    
+-->
+<title>Mapa airbnb</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<link href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
+<!--
+EDITA
+Entre las etiquetas style puedes editar el código CSS de los elementos extra del mapa. Ya sabes, todo lo referido a estilos.
+Ojo, dentro de estas etiquetas style cambiamos de lenguaje, pasamos a CSS.
+-->
+<style>
+body {
+margin: 0;
+padding: 0;
+}
+#map {
+position: absolute;
+top: 0;
+bottom: 0;
+width: 100%;
+}
+/*
+EDITA
+Con line-height cambiamos el interlineado de los titulares de los tooltips (h3).
+La unidad de medida em funciona como los porcentajes: 1em es igual a 100% y 1.2 sería como 120%.
+*/
+h3 {
+    line-height: 1.2em;
+}
+/*
+EDITA
+Con line-height cambiamos el interlineado de los textos dentro de los tooltips (p).
+La unidad de medida em funciona como los porcentajes: 1em es igual a 100% y 1.2 sería como 120%.
+*/
+p {
+    line-height: 0.8em;
+}
+/*
+EDITA
+Este selector span se refiere a los textos de la leyenda. 
+Podremos cambiar el color del texto (color) o el tamaño del texto (font-size) en píxeles.
+*/
+span {
+    color: black;
+    font-size: 14px;
+}
+/*
+EDITA
+Editando esta clase CSS modificaremos el estilo de los tooltips.
+En este caso, con la propiedad width modificaremos el ancho (no es recomendable tocar la altura (heigh)).
+*/
+.mapboxgl-popup-content {
+    width: 140px;
+}
+/*
+EDITA
+Editando esta clase CSS modificaremos el estilo de la caja de la leyenda.
+*/
+.map-overlay {
+  position: absolute;
+/*
+EDITA
+Con bottom 0 y right 0 posicionamos la caja de la leyenda en la esquina inferior derecha.
+Si, por ejemplo, quisiéramos situar la legenda arriba a la izquierda, eliminaríamos bottom: 0; y right: 0;
+y añadiríamos top: 0; y left: 0;
+*/
+  bottom: 0;
+  right: 0;
+/*
+EDITA
+Aquí podemos cambiar el color de la caja de la leyenda y la opacidad (0.8 es igual a 80% de opacidad)
+*/
+  background: rgba(255, 255, 255, 0.8);
+/*
+EDITA
+Aquí podemos cambiar el ancho y alto de la leyenda. 
+*/
+  width: 196px;
+  height: 170px;
+/*
+EDITA
+Aquí podemos modificar el margen de la leyenda con respecto al límite horizontal de la ventana.
+Si ubicamos la leyenda a la izquierda habría que usar margin-left
+*/
+  margin-right: 20px;
+/*
+EDITA
+Aquí podemos modificar el margen de la leyenda con respecto al límite vertical de la ventana.
+Si ubicamos la leyenda arriba habría que usar margin-top
+*/
+  margin-bottom: 40px;
+/*
+EDITA
+Fuente tipográfica del texto de la leyenda (ojo, sólo fuentes tipográficas universales)
+*/
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+/*
+EDITA
+Bordes redondeados de la caja de la leyenda.
+*/
+  border-radius: 3px;
+}
+/*
+EDITA
+Con este identificador CSS modificamos el estilo del contenido de la leyenda.
+*/
+#legend {
+/*
+EDITA
+Con esta propiedad padding modificamos el espacio reservado entre la caja de la leyenda y el contenido de la misma.
+*/
+  padding: 10px;
+/*
+EDITA
+Interlineado de cada item de la leyenda.
+*/
+  line-height: 22px;
+}
+/*
+EDITA
+Con esta clase CSS modificamos el estilo de los puntos o cuadros identificativos de la leyenda.
+*/
+.legend-key {
+  display: inline-block;
+/*
+EDITA
+Con la propiedad border-radius al 50% dibujamos círculos.
+Si queremos cuadrados, quitamos la propiedad o ponemos border-radius: 0%;
+*/
+  border-radius: 50%;
+/*
+EDITA
+Ancho y alto del punto o cuadrado. Deberían ser valores iguales.
+*/
+  width: 10px;
+  height: 10px;
+/*
+EDITA
+Margen con respecto al texto del item.
+*/
+  margin-right: 10px;
+}
+</style>
+<!-- Y aquí acabaría la edición del estilo CSS y, por tanto, el lenguaje CSS. Volvemos a lenguaje HTML-->
+<!-- 
+BUSCADOR DE CALLES (llamada al script)
+Con este script, podemos añadir un buscador de calles a nuestro mapa.
+No hay que editar nada.
+-->
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.css' type='text/css' />
+<!-- Fin del script del Buscador de calles-->
+</head>
+<body>
+<!-- El HTML sólo tendrá dos cajas o divs, el mapa en sí... -->
+<div id="map"></div>
+<!-- Y la leyenda (por encima)-->
+<div class='map-overlay' id='legend'></div>
+<!-- 
+PROPIEDADES DEL MAPA
+Dentro de las etiquetas script estaremos editando las propiedades del mapa usando lenguaje JavaScript
+y, concretamente, usando la librería Mapbox GL JS.
+-->
+<script>
+// ACCESS TOKEN: Entre las comillas simples, habrá que pegar la url del accessToken de nuestro usuario.
+mapboxgl.accessToken = 'pk.eyJ1Ijoid2VibWFzdGVyZHZhIiwiYSI6ImNsaWJsazEzczA5eXUzc21vczNzdDNhYW8ifQ.GDR-i5GFu9pRny0TTfShFA';
+var map = new mapboxgl.Map({
+container: 'map',
+// ESTILO: Entre las comillas simples, habrá que pegar la url del estilo de nuestro mapa (toda esta información está en Share del mapa en Mapbox Studio).
+style: 'mapbox://styles/webmasterdva/cljo3u0s100js01pkdzcjdjnx',
+// Aquí podremos editar el centro del mapa al visualizarse por primera vez, modificando la longitud y la latitud (ver en Settings del mapa en Mapbox Studio).
+center: [-2.134302, 43.160478],
+// Aquí podremos modificar el zoom del mapa al visualizarse por primera vez.
+zoom: 10
+});
+
+map.on('click', function (e) {
+var features = map.queryRenderedFeatures(e.point, {
+/* 
+TOOLTIPS
+Aquí debemos poner el nombre de la capa del tileset con los datos a visualizar en el tooltip.
+Ojo, el nombre no debe tener espacios, guiones ni símbolos extraños (esto lo podemos editar en Mapbox Studio).
+*/
+layers: ['gipuzkoa_airbnb']
+});
+if (!features.length) {
+return;
+}
+var feature = features[0];
+ 
+var popup = new mapboxgl.Popup({ offset: [0, -15] })
+.setLngLat(feature.geometry.coordinates)
+.setHTML(
+/*
+Aquí editamos qué contenido y cómo (mediante html) lo mostramos en los tooltips.
+En features.properties.name, name es el nombre de la columna con los datos que queremos mostrar 
+(de nuevo, minúsculas, sin espacios, sin caracteres extraños, SIN NÚMEROS...)
+*/
+    '<h3>' +
+feature.properties.nombre_alojamiento +
+'</h3> ' +
+'<p>' +
+feature.properties.alojamiento +
+'</p>' +
+'<p><b>Precio: </b>' +
+feature.properties.precio +
+'€ noche</p>'
+)
+.addTo(map);
+});
+
+/*
+LEYENDA
+Aquí editaremos el contenido de la leyenda.
+*/
+map.on('load', function() {
+/* 
+Entre las comillas simples pondremos los nombres de los items.
+En el último item podemos añadir con HTML otros textos aclaratorios en la leyenda.
+*/
+    var layers = ['<b>Tipos de alojamiento</b>', 'Apartemento entero', 'Habitación privada', 'Habitación compartida', 'Habitación de hotel', '<hr><p style="font-size: 0.9em; line-height: 1.2em;transform: translate(15%, -20%);"><br>Mapa: <b>G. Sánchez | DV</b></p>'];
+/* 
+Entre las comillas simples pondremos los colores de los círculos o cuadrados de los items.
+Deberán ir tantos colores como items hemos indicado en layers.
+*/
+    var colors = ['', '#e18741', '#5373c6', '#6be671', '#ee4444'];
+    for (i = 0; i < layers.length; i++) {
+  var layer = layers[i];
+  var color = colors[i];
+  var item = document.createElement('div');
+  var key = document.createElement('span');
+  key.className = 'legend-key';
+  key.style.backgroundColor = color;
+
+  var value = document.createElement('span');
+  value.innerHTML = layer;
+  item.appendChild(key);
+  item.appendChild(value);
+  legend.appendChild(item);
+}
+});
+map.getCanvas().style.cursor = 'pointer';
+
+/* 
+BUSCADOR DE CALLES
+Este es el código para introducir y editar el buscador de calles.
+*/
+map.on('load', () => {
+  const geocoder = new MapboxGeocoder({
+    accessToken: mapboxgl.accessToken,
+    mapboxgl: mapboxgl,
+// Con el zoom establecemos una escala del mapa al enseñarnos el resultado de la búsqueda.
+    zoom: 18,
+// Aquí cambiamos el texto predefinido del buscador
+    placeholder: 'Buscar dirección',
+// Aquí decimos si queremos (true) o no queremos (false) que se pinte un símbolo demarcador del resultado de la búsqueda en el mapa.
+    marker: false,
+// Aquí podemos editar el tipo de dato geográfico a buscar. Address son direcciones. Por ejemplo, si queremos sólo municipios, sería 'place'.
+    types:'address', 
+/*
+Aquí establecemos concretamente el área de búsqueda con dos pares de coordenadas longitud, latitud.
+El primer par se refiere al punto más al suroeste (esquina inferior izquierda) y
+el segundo par se refiere al punto más al nordeste (esquina superior derecha).
+*/
+    bbox: [-2.576376, 42.968406, -1.796347, 43.393996]
+  });
+// Aquí podemos modificar la ubicación del buscador. Por ejemplo, para ubicarlo en la esquina inferior derecha sería bottom-right
+  map.addControl(geocoder, 'top-left'); // Add the search box to the top left
+});
+// Fin del código del Buscador de calles
+</script>
+</body>
+</html>
